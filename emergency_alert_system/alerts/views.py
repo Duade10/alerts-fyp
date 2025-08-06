@@ -2,6 +2,8 @@ from rest_framework import generics
 from .models import Alert
 from .serializers import AlertSerializer
 from rest_framework.response import Response
+from django.conf import settings
+from django.core.mail import send_mail
 import math
 
 class CreateAlertView(generics.CreateAPIView):
@@ -10,6 +12,18 @@ class CreateAlertView(generics.CreateAPIView):
     """
     queryset = Alert.objects.all()
     serializer_class = AlertSerializer
+
+    def perform_create(self, serializer):
+        """Send an email notification after creating an alert."""
+        alert = serializer.save()
+        recipients = getattr(settings, 'ALERT_RECIPIENTS', [])
+        if recipients:
+            send_mail(
+                subject=f"New Alert: {alert.title}",
+                message=alert.message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=recipients,
+            )
 
 class ListNearbyAlertsView(generics.ListAPIView):
     """
