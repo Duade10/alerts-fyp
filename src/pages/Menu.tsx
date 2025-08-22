@@ -19,6 +19,11 @@ const Menu = () => {
       <Link to="/contacts" className="w-40 h-12 bg-gray-500 rounded-full text-lg font-semibold hover:bg-gray-600 transition flex items-center justify-center">
         Contacts
       </Link>
+      <Link to="/logout">
+        <button className="bg-red-500 text-white px-4 py-2 rounded">
+          Logout
+        </button>
+      </Link>
     </div>
   );
 };

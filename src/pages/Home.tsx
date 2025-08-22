@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import api from "../api/axios";
 
 const Home = () => {
   const [loading, setLoading] = useState(false);
@@ -32,11 +33,22 @@ const Home = () => {
     if (window.confirm("Are you sure you want to send an emergency alert?")) {
       setLoading(true);
       try {
-        const response = await axios.post("http://127.0.0.1:8000/", {
+        const token = localStorage.getItem("token");
+        
+        const response = await axios.post("http://127.0.0.1:8000/api/alerts/", {
           userId: "user123",
+          title: "Emergencyyy",
+          message: "This is an emergency, pls help!",
           latitude: location.lat,
           longitude: location.lng,
-        });
+        },
+      {
+        headers: {
+          Authorization: `Token ${token}`,  // 👈 Token, not Bearer
+          "Content-Type": "application/json",
+        }
+      }
+    );
         if (response.status === 200) {
           alert("Emergency alert sent successfully!");
         }

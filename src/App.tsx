@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
-// import axios from "axios";
+import axios from "axios";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Notifications from "./pages/Notifications";
