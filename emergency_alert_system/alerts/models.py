@@ -7,6 +7,11 @@ class Alert(models.Model):
     message = models.TextField()
     latitude = models.FloatField()
     longitude = models.FloatField()
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='alerts',
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
@@ -32,3 +37,18 @@ class Contact(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.user.email})"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+    )
+    alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return f"Notification for {self.user.email}: {self.message}"

@@ -6,6 +6,7 @@ from .views import (
     RegisterView,
     LoginView,
     ContactListCreateView,
+    NotificationListView,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/login/', LoginView.as_view(), name='login'),
     path('contacts/', ContactListCreateView.as_view(), name='contacts'),
+    path('notifications/', NotificationListView.as_view(), name='notifications'),
 ]
