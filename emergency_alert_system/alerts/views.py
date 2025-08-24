@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.http import Http404
 from rest_framework import generics, status
 from rest_framework.authtoken.models import Token
@@ -9,12 +9,13 @@ from django.conf import settings
 from django.core.mail import send_mail
 import math
 
-from .models import Alert, Contact
+from .models import Alert, Contact, Notification
 from .serializers import (
     AlertSerializer,
     UserSerializer,
     LoginSerializer,
     ContactSerializer,
+    NotificationSerializer,
 )
 
 
@@ -24,16 +25,48 @@ class CreateAlertView(generics.CreateAPIView):
     serializer_class = AlertSerializer
 
     def perform_create(self, serializer):
-        """Send an email notification after creating an alert."""
-        alert = serializer.save()
-        recipients = getattr(settings, 'ALERT_RECIPIENTS', [])
-        if recipients:
+        """Notify saved contacts via email and in-app alerts."""
+        alert = serializer.save(created_by=self.request.user)
+
+        contacts = Contact.objects.filter(user=self.request.user)
+        emails = [c.email for c in contacts if c.email]
+        if emails:
             send_mail(
                 subject=f"New Alert: {alert.title}",
                 message=alert.message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=recipients,
+                recipient_list=emails,
             )
+
+        for contact in contacts:
+            if not contact.email:
+                continue
+            try:
+                user = get_user_model().objects.get(email=contact.email)
+            except get_user_model().DoesNotExist:
+                continue
+            profile = getattr(user, 'profile', None)
+            if not profile or not profile.location_enabled:
+                continue
+            if profile.latitude is None or profile.longitude is None:
+                continue
+            R = 6371
+            dLat = math.radians(profile.latitude - alert.latitude)
+            dLon = math.radians(profile.longitude - alert.longitude)
+            a = (
+                math.sin(dLat / 2) ** 2
+                + math.cos(math.radians(alert.latitude))
+                * math.cos(math.radians(profile.latitude))
+                * math.sin(dLon / 2) ** 2
+            )
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            distance = R * c
+            if distance <= 0.1:
+                Notification.objects.create(
+                    user=user,
+                    alert=alert,
+                    message=f"Alert nearby: {alert.title}",
+                )
 
 
 class ListNearbyAlertsView(generics.ListAPIView):
@@ -133,3 +166,11 @@ class ContactListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')

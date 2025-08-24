@@ -1,13 +1,14 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Alert, UserProfile, Contact
+from .models import Alert, UserProfile, Contact, Notification
 
 
 class AlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alert
         fields = '__all__'
+        read_only_fields = ('created_by', 'timestamp')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -45,3 +46,9 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = ('id', 'name', 'phone', 'email')
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ('id', 'alert', 'message', 'created_at', 'read')
