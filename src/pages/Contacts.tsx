@@ -272,7 +272,7 @@ const Contacts = () => {
         const res = await axios.put(
           `http://localhost:8000/api/contacts/${editContact.id}/`,
           editContact,
-            { headers: { Authorization: `Bearer ${token}` } }
+            { headers: { Authorization: `Token ${token}` } }
         );
         setContacts(contacts.map((c) => (c.id === editContact.id ? res.data : c)));
         setEditContact(null);
@@ -289,7 +289,7 @@ const Contacts = () => {
       try {
         const token = localStorage.getItem("token")
         await axios.delete(`http://localhost:8000/api/contacts/${id}/`,
-           {headers: { Authorization: `Bearer ${token}` }, 
+           {headers: { Authorization: `Token ${token}` }, 
       });
         setContacts(contacts.filter((contact) => contact.id !== id));
       } catch (err) {
